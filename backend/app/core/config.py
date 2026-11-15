@@ -7,7 +7,7 @@ Pydantic BaseSettings ilə .env faylından konfiqurasiya oxunur.
 from pathlib import Path
 
 from pydantic_settings import BaseSettings
-from pydantic import model_validator
+from pydantic import field_validator, model_validator
 from typing import Optional
 
 
@@ -67,6 +67,33 @@ class Settings(BaseSettings):
     DEBUG: bool = False
 
     model_config = {"env_file": str(_ENV_FILE), "extra": "ignore"}
+
+    @field_validator("DATABASE_URL", mode="after")
+    @classmethod
+    def _normalize_database_url(cls, v: str) -> str:
+        """Neon/Supabase/Render formatındakı Postgres URL-ni asyncpg-yə uyğunlaşdırır.
+
+        - postgres:// və postgresql:// -> postgresql+asyncpg://
+        - sslmode=require -> ssl=require (asyncpg sslmode qəbul etmir)
+        - channel_binding parametri silinir (asyncpg dəstəkləmir)
+        """
+        v = v.strip()
+        for prefix in ("postgres://", "postgresql://"):
+            if v.startswith(prefix):
+                v = "postgresql+asyncpg://" + v[len(prefix):]
+                break
+        if v.startswith("postgresql+asyncpg://") and "?" in v:
+            base, query = v.split("?", 1)
+            params = []
+            for item in query.split("&"):
+                key, _, value = item.partition("=")
+                if key == "channel_binding" or not key:
+                    continue
+                if key == "sslmode":
+                    key = "ssl"
+                params.append(f"{key}={value}" if value else key)
+            v = base + ("?" + "&".join(params) if params else "")
+        return v
 
     @model_validator(mode="after")
     def _validate_secrets(self) -> "Settings":

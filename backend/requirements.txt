@@ -62,7 +62,7 @@ tqdm==4.68.3
 typing-inspection==0.4.2
 typing_extensions==4.16.0
 uvicorn==0.49.0
-uvloop==0.22.1
+uvloop==0.22.1; sys_platform != "win32"
 watchfiles==1.2.0
 websockets==16.0
 wrapt==2.2.2

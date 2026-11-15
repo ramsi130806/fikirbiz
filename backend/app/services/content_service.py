@@ -393,16 +393,17 @@ class ContentService:
         prompt = ContentService._build_prompt(request)
 
         try:
-            gpt4o_task = asyncio.to_thread(_call_gpt4o, prompt)
-
-            mistral_task = None
             if settings.MISTRAL_API_KEY:
-                mistral_task = asyncio.to_thread(_call_mistral, prompt)
-
-            results = await asyncio.gather(gpt4o_task, mistral_task, return_exceptions=True)
-
-            gpt4o_result = results[0] if not isinstance(results[0], Exception) else None
-            mistral_result = results[1] if mistral_task and not isinstance(results[1], Exception) else None
+                results = await asyncio.gather(
+                    asyncio.to_thread(_call_gpt4o, prompt),
+                    asyncio.to_thread(_call_mistral, prompt),
+                    return_exceptions=True,
+                )
+                gpt4o_result = results[0] if not isinstance(results[0], Exception) else None
+                mistral_result = results[1] if not isinstance(results[1], Exception) else None
+            else:
+                gpt4o_result = await asyncio.to_thread(_call_gpt4o, prompt)
+                mistral_result = None
 
             if gpt4o_result and mistral_result:
                 content = _merge_contents(gpt4o_result, mistral_result)

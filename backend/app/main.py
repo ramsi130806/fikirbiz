@@ -110,8 +110,11 @@ _cors_origins = [
     "https://fikirbiz-six.vercel.app",
     "http://localhost:5173",
 ]
-if settings.FRONTEND_URL and settings.FRONTEND_URL not in _cors_origins:
-    _cors_origins.insert(0, settings.FRONTEND_URL)
+# FRONTEND_URL vergüllə ayrılmış bir neçə domen ola bilər
+for _origin in (settings.FRONTEND_URL or "").split(","):
+    _origin = _origin.strip().rstrip("/")
+    if _origin and _origin not in _cors_origins:
+        _cors_origins.insert(0, _origin)
 
 app.add_middleware(
     CORSMiddleware,
