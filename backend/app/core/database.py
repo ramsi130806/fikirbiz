@@ -13,6 +13,9 @@ from app.core.config import settings
 connect_args = {}
 if settings.DATABASE_URL.startswith("sqlite"):
     connect_args = {"check_same_thread": False}
+elif "-pooler." in settings.DATABASE_URL:
+    # Neon/PgBouncer transaction pooler prepared statement cache dəstəkləmir
+    connect_args = {"statement_cache_size": 0}
 
 engine = create_async_engine(
     settings.DATABASE_URL,

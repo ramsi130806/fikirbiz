@@ -76,8 +76,11 @@ async def test_weak_password_is_rejected():
     assert await count_admins(TEST_FACTORY) == 0
 
 
-async def test_missing_email_or_password_is_skipped_quietly():
+async def test_missing_email_or_password_is_skipped_quietly(monkeypatch):
     """Env dəyərləri qoyulmayıbsa bootstrap səssizcə atlanmalıdır."""
+    from app.core import config
+    monkeypatch.setattr(config.settings, "ADMIN_EMAIL", None)
+    monkeypatch.setattr(config.settings, "ADMIN_PASSWORD", None)
     assert await ensure_admin_user(TEST_FACTORY, email="", password=GOOD_PASSWORD) is None
     assert await ensure_admin_user(TEST_FACTORY, email="a@b.com", password=None) is None
     assert await count_admins(TEST_FACTORY) == 0

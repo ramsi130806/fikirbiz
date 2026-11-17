@@ -16,7 +16,9 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # '%' configparser-də interpolasiya simvoludur (URL-encoded şifrələr üçün escape)
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL.replace("%", "%%"))
+# Neon migrationları birbaşa (non-pooler) bağlantı üzərindən işləməlidir
+_migration_url = settings.DATABASE_URL.replace("-pooler.", ".").replace("%", "%%")
+config.set_main_option("sqlalchemy.url", _migration_url)
 
 target_metadata = Base.metadata
 

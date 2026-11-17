@@ -42,7 +42,8 @@ async def ensure_admin_user(
     reset_password=True və istifadəci mövcuddursa — şifrə yenilənir
     (unudulmuş şifrə bərpası üçün).
     """
-    email = (email or settings.ADMIN_EMAIL or "").strip().lower()
+    raw_email = email if email is not None else settings.ADMIN_EMAIL
+    email = (raw_email or "").strip().lower()
     password = password if password is not None else settings.ADMIN_PASSWORD
 
     if not email:
